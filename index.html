@@ -2,44 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>German Article Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --maroon-bg: #3B0000;
+            --maroon-card: #5A0000;
+            --gold: #F5EE22;
+            --gold-hover: #F1D570;
+            --dull-orange: #C47F35;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Helvetica', Arial, sans-serif;
-            background-color: #F0F4F8;
+            font-family: 'Playfair Display', Georgia, serif;
+            background-color: var(--maroon-bg);
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            color: var(--gold);
         }
 
         .card {
-            background-color: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 40px;
+            background-color: var(--maroon-card);
+            /* "Swoopy" alternating border radius */
+            border-radius: 50px 10px 50px 10px;
+            /* Fancy double gold trim using border and inset shadow */
+            border: 3px solid var(--gold);
+            box-shadow: 
+                inset 0 0 0 6px var(--maroon-card), 
+                inset 0 0 0 8px var(--gold), 
+                0 15px 30px rgba(0, 0, 0, 0.6);
+            padding: 50px 30px;
             width: 100%;
             max-width: 420px;
             text-align: center;
+            position: relative;
         }
 
         #word {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333333;
-            margin-bottom: 5px;
-            min-height: 38px;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 8px;
+            min-height: 42px;
+            letter-spacing: 1px;
         }
 
         #translation {
-            font-size: 16px;
+            font-size: 18px;
             font-style: italic;
-            color: #64748B;
-            margin-bottom: 30px;
-            min-height: 19px;
+            color: var(--dull-orange);
+            margin-bottom: 35px;
+            min-height: 22px;
         }
 
         .button-container {
@@ -47,40 +69,62 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 25px;
+            flex-wrap: wrap; /* Helps with very small mobile screens */
         }
 
         button {
-            font-family: 'Helvetica', Arial, sans-serif;
-            font-size: 16px;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 18px;
             font-weight: bold;
-            background-color: #E2E8F0;
-            color: #1A202C;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 20px;
+            background-color: transparent;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            /* Matching swoopy shape for buttons */
+            border-radius: 20px 5px 20px 5px;
+            padding: 12px 24px;
             cursor: pointer;
-            transition: background-color 0.2s;
-            width: 80px;
+            transition: all 0.3s ease;
+            min-width: 90px;
         }
 
         button:hover {
-            background-color: #CBD5E0;
+            background-color: var(--gold);
+            color: var(--maroon-card);
+            border-color: var(--gold-hover);
         }
 
         button:disabled {
             cursor: not-allowed;
-            opacity: 0.8;
+            opacity: 0.5;
+            background-color: transparent;
+            color: var(--gold);
         }
 
         #feedback {
-            font-size: 16px;
-            min-height: 19px;
+            font-size: 18px;
+            min-height: 22px;
             font-weight: bold;
+            letter-spacing: 0.5px;
         }
 
-        .correct { color: #38A169; }
-        .incorrect { color: #E53E3E; }
-        .warning { color: #DD6B20; font-weight: normal; font-size: 14px; margin-top: 20px; }
+        .correct { color: #50C878; } /* Emerald green to contrast maroon */
+        .incorrect { color: #FF6347; } /* Tomato red */
+        .warning { color: var(--dull-orange); font-weight: normal; font-size: 14px; margin-top: 20px; }
+        
+        /* Mobile optimization */
+        @media (max-width: 480px) {
+            .card {
+                padding: 40px 20px;
+            }
+            #word {
+                font-size: 28px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                flex: 1; /* Allow buttons to grow evenly */
+            }
+        }
     </style>
 </head>
 <body>

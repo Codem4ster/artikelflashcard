@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Article Practice</title>
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            background-color: #F0F4F8;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        #word {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 5px;
+            min-height: 38px;
+        }
+
+        #translation {
+            font-size: 16px;
+            font-style: italic;
+            color: #64748B;
+            margin-bottom: 30px;
+            min-height: 19px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #E2E8F0;
+            color: #1A202C;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 80px;
+        }
+
+        button:hover {
+            background-color: #CBD5E0;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        #feedback {
+            font-size: 16px;
+            min-height: 19px;
+            font-weight: bold;
+        }
+
+        .correct { color: #38A169; }
+        .incorrect { color: #E53E3E; }
+        .warning { color: #DD6B20; font-weight: normal; font-size: 14px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div id="word">Loading...</div>
+        <div id="translation"></div>
+        
+        <div class="button-container">
+            <button id="btn-der" onclick="checkAnswer('der')">der</button>
+            <button id="btn-die" onclick="checkAnswer('die')">die</button>
+            <button id="btn-das" onclick="checkAnswer('das')">das</button>
+        </div>
+
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        let vocabulary = [];
+        let recentWords = [];
+        let currentWordData = null;
+        let isWaiting = false;
+        let cooldownSize = 0;
+
+        const wordEl = document.getElementById('word');
+        const translationEl = document.getElementById('translation');
+        const feedbackEl = document.getElementById('feedback');
+
+        // Initialization
+        async function initGame() {
+            try {
+                // Fetch the text file from the server/repository
+                const response = await fetch('german_words.txt');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                parseVocabulary(text);
+            } catch (error) {
+                console.error("Could not load german_words.txt:", error);
+                // Fallback for local testing without a web server
+                const fallbackData = "der Apfel Apple\ndie Frau Woman\ndas Haus House\nder Baum Tree\ndie Katze Cat\ndas Auto Car\nder Hund Dog\ndie Sonne Sun\ndas Buch Book";
+                parseVocabulary(fallbackData);
+                feedbackEl.className = 'warning';
+                feedbackEl.textContent = "Running offline: loaded sample words instead of german_words.txt.";
+            }
+
+            if (vocabulary.length > 0) {
+                cooldownSize = calculateCooldownSize(vocabulary.length);
+                nextWord();
+            } else {
+                wordEl.textContent = "No valid words found.";
+            }
+        }
+
+        function parseVocabulary(text) {
+            const lines = text.split('\n');
+            for (let line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                
+                // Split by spaces, allowing multiple spaces for the translation part
+                const parts = trimmed.split(/\s+/);
+                if (parts.length >= 3) {
+                    vocabulary.push({
+                        article: parts[0].toLowerCase(),
+                        word: parts[1],
+                        // Join remaining parts to support multi-word translations if underscores aren't used
+                        translation: parts.slice(2).join(' ') 
+                    });
+                }
+            }
+        }
+
+        function calculateCooldownSize(totalWords) {
+            if (totalWords <= 1) return 0;
+            if (totalWords === 2) return 1;
+            if (totalWords < 30) return Math.round(1 + (11 / 28) * (totalWords - 2));
+            return Math.floor(0.4 * totalWords);
+        }
+
+        function nextWord() {
+            isWaiting = false;
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
+
+            if (vocabulary.length === 0) return;
+
+            // Filter out recently used words
+            let availableChoices = vocabulary.filter(item => !recentWords.includes(item.word));
+
+            // Fallback if the calculation empties the list
+            if (availableChoices.length === 0) {
+                availableChoices = vocabulary;
+            }
+
+            // Pick random word
+            const randomIndex = Math.floor(Math.random() * availableChoices.length);
+            currentWordData = availableChoices[randomIndex];
+
+            // Manage cooldown tracker
+            recentWords.push(currentWordData.word);
+            while (recentWords.length > cooldownSize) {
+                recentWords.shift(); // Remove oldest word
+            }
+
+            // Update UI
+            wordEl.textContent = currentWordData.word;
+            translationEl.textContent = currentWordData.translation.replace(/_/g, ' '); // Cleans up underscores for display
+        }
+
+        function checkAnswer(guessedArticle) {
+            if (isWaiting || !currentWordData) return;
+            isWaiting = true;
+
+            let delay;
+
+            if (guessedArticle === currentWordData.article) {
+                feedbackEl.textContent = "Correct!";
+                feedbackEl.className = "correct";
+                delay = 800;
+            } else {
+                feedbackEl.textContent = `Incorrect. It is '${currentWordData.article} ${currentWordData.word}'.`;
+                feedbackEl.className = "incorrect";
+                delay = 2000;
+            }
+
+            setTimeout(nextWord, delay);
+        }
+
+        // Start the application
+        initGame();
+    </script>
+</body>
+</html>
